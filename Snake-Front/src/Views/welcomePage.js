@@ -1,5 +1,5 @@
 window.axios = require('axios');
-import Vue from 'vue';
+import Vue from 'vue/dist/vue';
 
 var app = new Vue({
     el: '#app',
@@ -17,9 +17,8 @@ var app = new Vue({
 
     methods:{
         play(){
+            localStorage.setItem('name', this.username);
             window.location.href = 'snake.html'
         }
     }
 })
-
-export default app.$data.username

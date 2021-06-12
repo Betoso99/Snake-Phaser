@@ -1,6 +1,5 @@
 import axios from 'axios';
 import Phaser, { Cameras } from 'phaser';
-import app from '../Views/welcomePage';
 
 var config = {
     type: Phaser.AUTO,
@@ -20,7 +19,7 @@ var config = {
 var game = new Phaser.Game(config);
 
 var snake, cursor, apple, redApple, op, bar, ejeX, ejeY, long, high, 
-    camera, scoreText, score = 0, cordinates
+    camera, scoreText, score = 0, cordinates, currentName
 
 function preload() {
     this.load.setBaseURL('http://labs.phaser.io');
@@ -31,7 +30,7 @@ function preload() {
 }
 
 function create() {
-    console.log(app)
+    currentName = localStorage.getItem('name');
     camera = this.cameras.main;
     cursor = this.add.image(200, 200, 'cursor').setVisible(true)
     snake = []
@@ -84,12 +83,13 @@ function redHit(sna, food){
     }
     else{
         axios.post('http://localhost:3000', {
-            "Username": name,
+            "Username": currentName,
             "Score": score.toString()
         });
         alert('Game Over')
-/*         this.scene.pause()
- */    }
+        this.scene.pause()
+        window.location.href = 'index.html'
+    }
 }
 
 function Hit(sna, food) {

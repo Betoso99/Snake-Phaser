@@ -92,7 +92,6 @@ func (record *Record) DeleteScore(id int) {
 	stmt.Exec(id)
 }
 
-////////////////////////////////////////////////////////////////
 func (record *Record) Put(user string, score string) {
 	var ID int = record.getid(user)
 
