@@ -57,10 +57,11 @@ func main() {
 		body := map[string]string{}
 		req.BindBody(&body)
 		item := snake.Item{
+			Id:       body["Id"],
 			Username: body["Username"],
 			Score:    body["Score"],
 		}
-		object.Put(item.Username, item.Score)
+		object.Put(item.Id, item.Username, item.Score)
 		res.SendStatus(200)
 	})
 
@@ -72,7 +73,7 @@ func main() {
 			Username: body["Username"],
 		}
 		object.Delete(item.Username)
-		res.SendJSON(item)
+		res.SendStatus(200)
 	})
 
 	http.ListenAndServe(":3000", router)

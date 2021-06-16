@@ -92,9 +92,7 @@ func (record *Record) DeleteScore(id int) {
 	stmt.Exec(id)
 }
 
-func (record *Record) Put(user string, score string) {
-	var ID int = record.getid(user)
-
+func (record *Record) Put(id string, user string, score string) {
 	stmt1, err1 := record.DB.Prepare(`
 		UPDATE users SET username = $1 WHERE id = $2;
 	`)
@@ -108,31 +106,23 @@ func (record *Record) Put(user string, score string) {
 		fmt.Println("Error:", err2)
 	}
 
-	stmt1.Exec(user, ID)
-	stmt2.Exec(score, ID)
-}
-
-func (record *Record) PutUser() {
-	stmt, err := record.DB.Prepare(`
-		TRUNCATE TABLE users;
-	`)
-	if err != nil {
-		fmt.Println("Error:", err)
-	}
-	stmt.Exec()
+	stmt1.Exec(user, id)
+	stmt2.Exec(score, id)
 }
 
 func (record *Record) Get() []Item {
 	var username string
 	var score string
+	var id string
 	items := []Item{}
 	rows, _ := record.DB.Query(`
-		SELECT u.username, s.score FROM users AS u INNER JOIN scores AS s ON u.id = s.userid ORDER BY s.score desc LIMIT 10;
+		SELECT u.id, u.username, s.score FROM users AS u INNER JOIN scores AS s ON u.id = s.userid ORDER BY s.score desc LIMIT 10;
 	`)
 
 	for rows.Next() {
-		rows.Scan(&username, &score)
+		rows.Scan(&id, &username, &score)
 		item := Item{
+			Id:       id,
 			Username: username,
 			Score:    score,
 		}

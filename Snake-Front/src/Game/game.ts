@@ -23,6 +23,7 @@ var snake, cursor, apple, redApple, op, bar, ejeX, ejeY, long, high,
 
 function preload() {
     this.load.setBaseURL('http://labs.phaser.io');
+    this.load.spritesheet('cursor', 'assets/sprites/balls.png', { frameWidth: 17, frameHeight: 17 });
     this.load.image('block', 'assets/sprites/shinyball.png');
     this.load.image('bar', 'assets/sprites/healthbar.png');
     this.load.image('redApple', 'assets/sprites/apple.png');
@@ -32,7 +33,7 @@ function preload() {
 function create() {
     currentName = localStorage.getItem('name');
     camera = this.cameras.main;
-    cursor = this.add.image(200, 200, 'cursor').setVisible(true)
+    cursor = this.add.image(200, 200, 'balls', 0).setVisible(true)
     snake = []
     apple = []
     bar = []
