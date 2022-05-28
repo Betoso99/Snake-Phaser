@@ -1,0 +1,34 @@
+version: '3.8'
+services:
+  snake-backend:
+    container_name: snake-backend-container
+    restart: always
+    build: ./Snake-Back
+    ports: 
+      - 3000:3000
+    depends_on:
+      - cockroach_DB
+    
+  cockroach_DB:
+    container_name: cockroach-database
+    image: cockroachdb/cockroach
+    expose:
+      - 8080
+    ports:
+      - 8080:8080
+    volumes:
+      - backendDB:/data/db
+    command: start-single-node --insecure    
+    
+  snake-frontend:
+    container_name: snake-frontend-container
+    restart: always
+    build: ./Snake-Front
+    ports: 
+      - 8000:8000
+    depends_on:
+      - snake-backend
+    
+volumes:
+  backendDB:
+    
