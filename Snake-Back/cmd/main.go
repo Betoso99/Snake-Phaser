@@ -4,10 +4,8 @@ import (
 	"back/platform/snake"
 	"database/sql"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
@@ -16,7 +14,7 @@ import (
 )
 
 func main() {
-	db, err := sql.Open("postgres", os.Getenv("CONECTION_STRING"))
+	db, err := sql.Open("postgres", "postgresql://root@localhost:26257/defaultdb?sslmode=disable")
 	if err != nil {
 		log.Fatalln("Connecting to db", err)
 	}
@@ -111,7 +109,8 @@ func main() {
 		body := map[string]string{}
 		err := req.BindBody(&body)
 		if err != nil {
-			fmt.Errorf("body could'n bind: %s", err)
+			res.SendStatus(http.StatusInternalServerError)
+			return
 		}
 		item := snake.Item{
 			Username: body["Username"],

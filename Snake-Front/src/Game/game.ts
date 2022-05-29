@@ -19,7 +19,7 @@ var config = {
 var game = new Phaser.Game(config);
 
 var snake, cursor, apple, redApple, op, bar, ejeX, ejeY, long, high, 
-    camera, scoreText, score = 0, cordinates, currentName
+    camera, scoreText, score = 0, cordinates, currentName, group
 
 function preload() {
     this.load.setBaseURL('http://labs.phaser.io');
@@ -58,19 +58,26 @@ function create() {
             }
         }
     }, this)
-    
-    this.rect = new Phaser.Geom.Rectangle(0, 0, long, high)
-    Phaser.Actions.RandomRectangle(snake, this.rect)
-    camera.startFollow(snake[0], false);
 
+    group = this.physics.add.staticGroup({
+        key: 'bar',
+        frameQuantity: 30
+    });
+
+    this.rect = new Phaser.Geom.Rectangle(0, 0, long, high);
+    Phaser.Actions.PlaceOnRectangle(group.getChildren(), this.rect);
+    Phaser.Actions.RandomRectangle(snake, this.rect);
+    group.refresh();
+    this.physics.add.collider(snake[0], group, gameOver, null, this);
+    camera.startFollow(snake[0], false);
 }
 
 function update() {
-    cordinates.setText('Sprite is at: (' + Math.round(snake[0].x) + ',' + Math.round(snake[0].y) + ')')
+    cordinates.setText('You are at: (' + Math.round(snake[0].x) + ',' + Math.round(snake[0].y) + ')')
     this.physics.add.collider(snake[0], apple, Hit, null, this)
     this.physics.add.collider(snake[0], redApple, redHit, null, this)
     Phaser.Actions.WrapInRectangle(snake, this.rect)
-    this.physics.world.collide(snake, bar)
+    this.physics.world.collide(snake, bar, gameOver,null, this)
 }
 
 function redHit(sna, food){
@@ -83,13 +90,7 @@ function redHit(sna, food){
         food.destroy()
     }
     else{
-        axios.post('http://localhost:3000', {
-            "Username": currentName,
-            "Score": score.toString()
-        });
-        alert('Game Over')
-        this.scene.pause()
-        window.location.href = 'index.html'
+        gameOver();
     }
 }
 
@@ -143,6 +144,16 @@ function randomApple(scene, first, second, arr, path){
             arr.push(scene.physics.add.image(first, second, path));
         }
     }
+}
+
+function gameOver(){
+    axios.post('http://localhost:3000', {
+            "Username": currentName,
+            "Score": score.toString()
+        });
+        alert('Game Over')
+        this.scene.pause()
+        window.location.href = 'index.html'
 }
 
 function removeItemFromArr(arr, item) {
