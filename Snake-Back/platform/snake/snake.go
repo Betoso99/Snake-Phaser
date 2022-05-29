@@ -2,8 +2,13 @@ package snake
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"strconv"
+)
+
+var (
+	ErrInvalidQueryStatement = errors.New("invalid query statement")
 )
 
 type Record struct {
@@ -22,7 +27,7 @@ func (record *Record) getid(username string) (int, error) {
 		SELECT id FROM users WHERE username = $1;
 	`)
 	if err != nil {
-		return 0, fmt.Errorf("invalid query statement: %w", err)
+		return 0, fmt.Errorf(ErrInvalidQueryStatement.Error(), err)
 	}
 	row, err := stmt.Query(username)
 	if err != nil {
@@ -39,7 +44,7 @@ func (record *Record) Add(item Item) error {
 		INSERT INTO users(username) values($1);
 	`)
 	if err != nil {
-		return fmt.Errorf("invalid query statement: %w", err)
+		return ErrInvalidQueryStatement
 	}
 	_, err = stmt.Exec(item.Username)
 	if err != nil {
@@ -53,7 +58,7 @@ func (record *Record) AddScore(item Item, username string) error {
 		INSERT INTO scores(userid, score) values ($1, $2);
 	`)
 	if err != nil {
-		return fmt.Errorf("invalid query statement: %w", err)
+		return fmt.Errorf(ErrInvalidQueryStatement.Error(), err)
 	}
 	tempID, err := record.getid(username)
 	if err != nil {
@@ -76,7 +81,7 @@ func (record *Record) Delete(username string) error {
 		DELETE FROM users WHERE id = $1;
 	`)
 	if err != nil {
-		return fmt.Errorf("invalid query statement: %w", err)
+		return fmt.Errorf(ErrInvalidQueryStatement.Error(), err)
 	}
 	tempID, err := record.getid(username)
 	if err != nil {
@@ -98,7 +103,7 @@ func (record *Record) DeleteScore(id int) error {
 		DELETE FROM scores WHERE userid = $1;
 	`)
 	if err != nil {
-		return fmt.Errorf("invalid query statement: %w", err)
+		return fmt.Errorf(ErrInvalidQueryStatement.Error(), err)
 	}
 	_, err = stmt.Exec(id)
 	if err != nil {
@@ -112,14 +117,14 @@ func (record *Record) Put(id string, user string, score string) error {
 		UPDATE users SET username = $1 WHERE id = $2;
 	`)
 	if err != nil {
-		return fmt.Errorf("invalid query statement: %w", err)
+		return fmt.Errorf(ErrInvalidQueryStatement.Error(), err)
 	}
 
 	stmt2, err := record.DB.Prepare(`
 		UPDATE scores SET score = $1 WHERE userid = $2;
 	`)
 	if err != nil {
-		return fmt.Errorf("invalid query statement: %w", err)
+		return fmt.Errorf(ErrInvalidQueryStatement.Error(), err)
 	}
 
 	_, err = stmt1.Exec(user, id)
@@ -142,7 +147,7 @@ func (record *Record) Get() ([]Item, error) {
 		SELECT u.id, u.username, s.score FROM users AS u INNER JOIN scores AS s ON u.id = s.userid ORDER BY s.score desc LIMIT 10;
 	`)
 	if err != nil {
-		return nil, fmt.Errorf("invalid query statement: %w", err)
+		return nil, fmt.Errorf(ErrInvalidQueryStatement.Error(), err)
 	}
 
 	for rows.Next() {

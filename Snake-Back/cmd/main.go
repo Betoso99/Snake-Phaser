@@ -3,6 +3,7 @@ package main
 import (
 	"back/platform/snake"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -15,12 +16,6 @@ import (
 )
 
 func main() {
-	// hostname, error := os.Hostname()
-	// print(hostname)
-	// if error != nil {
-	// 	println("Error getting the host: ", error)
-	// }
-
 	db, err := sql.Open("postgres", os.Getenv("CONECTION_STRING"))
 	if err != nil {
 		log.Fatalln("Connecting to db", err)
@@ -39,7 +34,7 @@ func main() {
 	   	);
 	   	`)
 	if err != nil {
-		log.Fatalln("tables create", err)
+		log.Fatalln("create tables error: %w", err)
 	}
 
 	object := snake.DatabaseDeclaration(db)
@@ -55,11 +50,12 @@ func main() {
 	}))
 
 	router.Get("/", func(rw http.ResponseWriter, r *http.Request) {
-		res, err := yin.Event(rw, r)
+		res, _ := yin.Event(rw, r)
+		items, err := object.Get()
 		if err != nil {
-			fmt.Errorf("get id error: %w", err)
+			res.SendStatus(http.StatusInternalServerError)
+			return
 		}
-		items, _ := object.Get()
 		res.SendJSON(items)
 	})
 
@@ -71,36 +67,60 @@ func main() {
 			Username: body["Username"],
 			Score:    body["Score"],
 		}
-		object.Add(item)
-		object.AddScore(item, item.Username)
+		err := object.Add(item)
+		if errors.Is(err, snake.ErrInvalidQueryStatement) {
+			res.SendStatus(http.StatusInternalServerError)
+			return
+		}
+		if err != nil {
+			res.SendStatus(http.StatusInternalServerError)
+			return
+		}
+		err = object.AddScore(item, item.Username)
+		if err != nil {
+			res.SendStatus(http.StatusInternalServerError)
+			return
+		}
 		res.SetHeader("Access-Control-Allow-Origin", "*")
-		fmt.Println()
-		res.SendStatus(200)
-
+		res.SendStatus(http.StatusOK)
 	})
 
 	router.Put("/", func(rw http.ResponseWriter, r *http.Request) {
 		res, req := yin.Event(rw, r)
 		body := map[string]string{}
-		req.BindBody(&body)
+		err := req.BindBody(&body)
+		if err != nil {
+			res.SendStatus(http.StatusInternalServerError)
+			return
+		}
 		item := snake.Item{
 			Id:       body["Id"],
 			Username: body["Username"],
 			Score:    body["Score"],
 		}
-		object.Put(item.Id, item.Username, item.Score)
-		res.SendStatus(200)
+		err = object.Put(item.Id, item.Username, item.Score)
+		if err != nil {
+			res.SendStatus(http.StatusInternalServerError)
+			return
+		}
+		res.SendStatus(http.StatusOK)
 	})
 
 	router.Delete("/", func(rw http.ResponseWriter, r *http.Request) {
 		res, req := yin.Event(rw, r)
 		body := map[string]string{}
-		req.BindBody(&body)
+		err := req.BindBody(&body)
+		if err != nil {
+			fmt.Errorf("body could'n bind: %s", err)
+		}
 		item := snake.Item{
 			Username: body["Username"],
 		}
-		object.Delete(item.Username)
-		res.SendStatus(200)
+		err = object.Delete(item.Username)
+		if err != nil {
+			res.SendStatus(http.StatusInternalServerError)
+		}
+		res.SendStatus(http.StatusOK)
 	})
 
 	err = http.ListenAndServe(":3000", router)
