@@ -39,10 +39,10 @@ func main() {
 	   	);
 	   	`)
 	if err != nil {
-		log.Fatalln("Tables", err)
+		log.Fatalln("tables create", err)
 	}
 
-	object := snake.NewTbl(db)
+	object := snake.DatabaseDeclaration(db)
 
 	router := chi.NewRouter()
 	router.Use(yin.SimpleLogger)
@@ -55,8 +55,11 @@ func main() {
 	}))
 
 	router.Get("/", func(rw http.ResponseWriter, r *http.Request) {
-		res, _ := yin.Event(rw, r)
-		items := object.Get()
+		res, err := yin.Event(rw, r)
+		if err != nil {
+			fmt.Errorf("get id error: %w", err)
+		}
+		items, _ := object.Get()
 		res.SendJSON(items)
 	})
 
@@ -100,5 +103,8 @@ func main() {
 		res.SendStatus(200)
 	})
 
-	http.ListenAndServe(":3000", router)
+	err = http.ListenAndServe(":3000", router)
+	if err != nil {
+		log.Fatalln("listening to port 3000: %w", err)
+	}
 }
