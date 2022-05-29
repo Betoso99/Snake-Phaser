@@ -8,14 +8,16 @@ services:
       - 3000:3000
     depends_on:
       - cockroach_DB
+    environment:
+      - CONECTION_STRING=postgresql://root@cockroach_DB:26257/defaultdb?sslmode=disable
     
   cockroach_DB:
     container_name: cockroach-database
     image: cockroachdb/cockroach
     expose:
-      - 8080
+      - 26257
     ports:
-      - 8080:8080
+      - 26257:26257
     volumes:
       - backendDB:/data/db
     command: start-single-node --insecure    

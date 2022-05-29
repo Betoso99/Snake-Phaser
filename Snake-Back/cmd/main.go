@@ -4,7 +4,9 @@ import (
 	"back/platform/snake"
 	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
@@ -13,9 +15,31 @@ import (
 )
 
 func main() {
-	db, err := sql.Open("postgres", "postgresql://root@localhost:26257/snake?sslmode=disable")
+	// hostname, error := os.Hostname()
+	// print(hostname)
+	// if error != nil {
+	// 	println("Error getting the host: ", error)
+	// }
+
+	db, err := sql.Open("postgres", os.Getenv("CONECTION_STRING"))
 	if err != nil {
-		println("error connecting to the database: ", err)
+		log.Fatalln("Connecting to db", err)
+	}
+
+	_, err = db.Exec(`
+	   	CREATE TABLE IF NOT EXISTS users (
+	   		id SERIAL NOT NULL PRIMARY KEY,
+	   		username text
+	   	);
+
+	   	CREATE TABLE IF NOT EXISTS scores (
+	   		idscore SERIAL NOT NULL PRIMARY KEY,
+	   		userid INT NOT NULL REFERENCES users(id),
+	   		score INT NOT NULL
+	   	);
+	   	`)
+	if err != nil {
+		log.Fatalln("Tables", err)
 	}
 
 	object := snake.NewTbl(db)

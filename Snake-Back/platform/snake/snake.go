@@ -3,6 +3,7 @@ package snake
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strconv"
 )
 
@@ -115,9 +116,12 @@ func (record *Record) Get() []Item {
 	var score string
 	var id string
 	items := []Item{}
-	rows, _ := record.DB.Query(`
+	rows, err := record.DB.Query(`
 		SELECT u.id, u.username, s.score FROM users AS u INNER JOIN scores AS s ON u.id = s.userid ORDER BY s.score desc LIMIT 10;
 	`)
+	if err != nil {
+		log.Fatalln("------------------------------------------------------------------------", err)
+	}
 
 	for rows.Next() {
 		rows.Scan(&id, &username, &score)
