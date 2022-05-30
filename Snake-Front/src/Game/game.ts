@@ -28,6 +28,7 @@ function preload() {
     this.load.image('bar', 'assets/sprites/healthbar.png');
     this.load.image('redApple', 'assets/sprites/apple.png');
     this.load.image('food', 'assets/sprites/apple.png');
+    this.load.image('crate', 'assets/sprites/crate32.png');
 }
 
 function create() {
@@ -43,6 +44,7 @@ function create() {
     redApple[0] = this.physics.add.image(300, 200, 'redApple')
     apple[0] = this.physics.add.image(100, 150, 'food').setTint(0x00ff00)
     snake[0] = this.physics.add.image(200, 200, 'block').setTint(0x00ff00)
+
     scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#000' }).setScrollFactor(0);
     cordinates = this.add.text(16, 50, 'Sprite is at: (' + snake[0].x + ',' + snake[0].y + ')', { fontSize: '16px', fill: '#000' }).setScrollFactor(0);
     this.input.on('pointerdown', function (pointer) {
@@ -60,14 +62,15 @@ function create() {
     }, this)
 
     group = this.physics.add.staticGroup({
-        key: 'bar',
-        frameQuantity: 30
+        key: 'crate',
+        frameQuantity: 1000
     });
 
     this.rect = new Phaser.Geom.Rectangle(0, 0, long, high);
     Phaser.Actions.PlaceOnRectangle(group.getChildren(), this.rect);
     Phaser.Actions.RandomRectangle(snake, this.rect);
     group.refresh();
+    this.physics.add.collider(snake[0], bar, gameOver, null, this);
     this.physics.add.collider(snake[0], group, gameOver, null, this);
     camera.startFollow(snake[0], false);
 }
@@ -108,14 +111,14 @@ function Hit(sna, food) {
     }
 
     while(!apple[0]){
-        ejeX = getRandomInt(20, long + 1)
-        ejeY = getRandomInt(20, high + 1)
+        ejeX = getRandomInt(20, long - 50)
+        ejeY = getRandomInt(20, high - 50)
         randomApple(this, ejeX, ejeY, apple, 'food')
     }
 
     if(snake.length%3 === 0){
-        ejeX = getRandomInt(20, long + 1)
-        ejeY = getRandomInt(20, high + 1)
+        ejeX = getRandomInt(20, long - 50)
+        ejeY = getRandomInt(20, high - 50)
         randomApple(this, ejeX, ejeY, redApple, 'redApple')
         if(redApple.length === 4){
             redApple.splice(0,1)
@@ -153,8 +156,8 @@ function gameOver(){
         });
         alert('Game Over')
         this.scene.pause()
-        window.location.href = 'index.html'
-}
+        history.back()
+    }
 
 function removeItemFromArr(arr, item) {
     var i = getIndex(arr, item)
