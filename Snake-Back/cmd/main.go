@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
@@ -14,7 +15,7 @@ import (
 )
 
 func main() {
-	db, err := sql.Open("postgres", "postgresql://root@localhost:26257/defaultdb?sslmode=disable")
+	db, err := sql.Open("postgres", os.Getenv("CONECTION_STRING"))
 	if err != nil {
 		log.Fatalln("Connecting to db", err)
 	}

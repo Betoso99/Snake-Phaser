@@ -10,6 +10,9 @@ import (
 var (
 	ErrInvalidQueryStatement = errors.New("invalid query statement")
 )
+var (
+	ErrScanCouldntComplete = errors.New("row scan error")
+)
 
 type Record struct {
 	DB *sql.DB
@@ -27,7 +30,7 @@ func (record *Record) getid(username string) (int, error) {
 		SELECT id FROM users WHERE username = $1;
 	`)
 	if err != nil {
-		return 0, fmt.Errorf(ErrInvalidQueryStatement.Error(), err)
+		return 0, ErrInvalidQueryStatement
 	}
 	row, err := stmt.Query(username)
 	if err != nil {
@@ -35,6 +38,9 @@ func (record *Record) getid(username string) (int, error) {
 	}
 	for row.Next() {
 		row.Scan(&value)
+		if err != nil {
+			return 0, ErrScanCouldntComplete
+		}
 	}
 	return value, nil
 }
@@ -58,7 +64,7 @@ func (record *Record) AddScore(item Item, username string) error {
 		INSERT INTO scores(userid, score) values ($1, $2);
 	`)
 	if err != nil {
-		return fmt.Errorf(ErrInvalidQueryStatement.Error(), err)
+		return ErrInvalidQueryStatement
 	}
 	tempID, err := record.getid(username)
 	if err != nil {
@@ -81,7 +87,7 @@ func (record *Record) Delete(username string) error {
 		DELETE FROM users WHERE id = $1;
 	`)
 	if err != nil {
-		return fmt.Errorf(ErrInvalidQueryStatement.Error(), err)
+		return ErrInvalidQueryStatement
 	}
 	tempID, err := record.getid(username)
 	if err != nil {
@@ -103,7 +109,7 @@ func (record *Record) DeleteScore(id int) error {
 		DELETE FROM scores WHERE userid = $1;
 	`)
 	if err != nil {
-		return fmt.Errorf(ErrInvalidQueryStatement.Error(), err)
+		return ErrInvalidQueryStatement
 	}
 	_, err = stmt.Exec(id)
 	if err != nil {
@@ -117,14 +123,14 @@ func (record *Record) Put(id string, user string, score string) error {
 		UPDATE users SET username = $1 WHERE id = $2;
 	`)
 	if err != nil {
-		return fmt.Errorf(ErrInvalidQueryStatement.Error(), err)
+		return ErrInvalidQueryStatement
 	}
 
 	stmt2, err := record.DB.Prepare(`
 		UPDATE scores SET score = $1 WHERE userid = $2;
 	`)
 	if err != nil {
-		return fmt.Errorf(ErrInvalidQueryStatement.Error(), err)
+		return ErrInvalidQueryStatement
 	}
 
 	_, err = stmt1.Exec(user, id)
@@ -147,13 +153,13 @@ func (record *Record) Get() ([]Item, error) {
 		SELECT u.id, u.username, s.score FROM users AS u INNER JOIN scores AS s ON u.id = s.userid ORDER BY s.score desc LIMIT 10;
 	`)
 	if err != nil {
-		return nil, fmt.Errorf(ErrInvalidQueryStatement.Error(), err)
+		return nil, ErrInvalidQueryStatement
 	}
 
 	for rows.Next() {
 		_, err = rows.Scan(&id, &username, &score), nil
 		if err != nil {
-			return nil, fmt.Errorf("row scan error: %w", err)
+			return nil, ErrScanCouldntComplete
 		}
 		item := Item{
 			Id:       id,
